@@ -23,7 +23,6 @@ pykeyvi_p_cpp = '_core_p.cpp'
 keyvi_cpp_source = '../keyvi'
 keyvi_cpp = 'src/cpp'
 keyvi_cpp_link = path.join(keyvi_cpp, 'keyvi')
-mac_os_static_libs_dir = 'mac_os_static_libs'
 keyvi_build_dir = path.join(keyvi_cpp, 'build-{}'.format(platform.platform()))
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -36,7 +35,7 @@ except:
 
 VERSION_MAJOR = 0
 VERSION_MINOR = 5
-VERSION_PATCH = 4
+VERSION_PATCH = 7
 VERSION_DEV = 0
 IS_RELEASED = False
 
@@ -166,20 +165,6 @@ def cmake_configure(build_path, build_type, zlib_root, additional_compile_flags)
     # set link libraries
     if cmake_flags['KEYVI_LINK_LIBRARIES_STATIC']:
         if sys.platform == 'darwin':
-            # clang on OSX does not understand -Bstatic or an equivalent
-            # workaround: copy files into an extra directory
-            if not os.path.exists(mac_os_static_libs_dir):
-                os.makedirs(mac_os_static_libs_dir)
-
-            for lib in cmake_flags['KEYVI_LINK_LIBRARIES_STATIC'].split(' '):
-                lib_file_name = 'lib{}.a'.format(lib)
-                src_file = path.join('/usr/local/lib', lib_file_name)
-                dst_file = path.join(mac_os_static_libs_dir, lib_file_name)
-                if os.path.exists(src_file):
-                    shutil.copyfile(src_file, dst_file)
-
-            extra_link_arguments = ['-L{}'.format(mac_os_static_libs_dir)]
-            set_additional_flags('extra_link_args', extra_link_arguments)
             set_additional_flags('libraries', cmake_flags['KEYVI_LINK_LIBRARIES_STATIC'].split(' '))
 
         else:
@@ -228,7 +213,10 @@ with symlink_keyvi() as (pykeyvi_source_path, keyvi_source_path):
     if pykeyvi_source_path is not None:
         additional_compile_flags += ' -fdebug-prefix-map={}={}'.format(pykeyvi_source_path, keyvi_source_path)
 
-    link_library_dirs = [keyvi_build_dir]
+    link_library_dirs = [
+        keyvi_build_dir,
+        '/usr/local/lib/',  # as of 17/07/2022 Python 3.10 build on GH actions needs '/usr/local/lib/' link library dir
+    ]
 
     #########################
     # Custom 'build' command
@@ -325,9 +313,6 @@ with symlink_keyvi() as (pykeyvi_source_path, keyvi_source_path):
             print ("Building keyvi C++ part: " + keyvi_build_cmd)
             subprocess.call(keyvi_build_cmd, shell=True)
 
-            if sys.platform == 'darwin':
-                os.environ['ARCHFLAGS'] = '-arch x86_64'
-
             _build_ext.build_ext.run(self)
 
     class build_ext(custom_opts, build_cxx):
@@ -386,10 +371,10 @@ with symlink_keyvi() as (pykeyvi_source_path, keyvi_source_path):
             'Programming Language :: C++',
             'Programming Language :: Cython',
             'Programming Language :: Python',
-            'Programming Language :: Python :: 3.6',
             'Programming Language :: Python :: 3.7',
             'Programming Language :: Python :: 3.8',
             'Programming Language :: Python :: 3.9',
+            'Programming Language :: Python :: 3.10',
             'Programming Language :: Python :: Implementation :: CPython',
             'Programming Language :: Python :: Implementation :: PyPy',
             'Operating System :: MacOS :: MacOS X',

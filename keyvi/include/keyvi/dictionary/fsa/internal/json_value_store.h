@@ -62,7 +62,7 @@ namespace internal {
 
 class JsonValueStoreBase {
  public:
-  typedef std::string value_t;
+  using value_t = std::string;
   static const std::string no_value;
   static const bool inner_weight = false;
 
@@ -88,9 +88,8 @@ class JsonValueStoreBase {
 class JsonValueStoreMinimizationBase : public JsonValueStoreBase {
  public:
   explicit JsonValueStoreMinimizationBase(const keyvi::util::parameters_t& parameters = keyvi::util::parameters_t())
-      : parameters_(parameters),
-        hash_(keyvi::util::mapGetMemory(parameters, MEMORY_LIMIT_KEY, DEFAULT_MEMORY_LIMIT_VALUE_STORE)) {
-    temporary_directory_ = keyvi::util::mapGetTemporaryPath(parameters_);
+      : hash_(keyvi::util::mapGetMemory(parameters, MEMORY_LIMIT_KEY, DEFAULT_MEMORY_LIMIT_VALUE_STORE)) {
+    temporary_directory_ = keyvi::util::mapGetTemporaryPath(parameters);
 
     temporary_directory_ /= boost::filesystem::unique_path("dictionary-fsa-json_value_store-%%%%-%%%%-%%%%-%%%%");
     boost::filesystem::create_directory(temporary_directory_);
@@ -116,7 +115,6 @@ class JsonValueStoreMinimizationBase : public JsonValueStoreBase {
   }
 
  protected:
-  keyvi::util::parameters_t parameters_;
   boost::filesystem::path temporary_directory_;
   std::unique_ptr<MemoryMapManager> values_extern_;
   LeastRecentlyUsedGenerationsCache<RawPointer<>> hash_;
@@ -129,10 +127,10 @@ class JsonValueStore final : public JsonValueStoreMinimizationBase {
  public:
   explicit JsonValueStore(const keyvi::util::parameters_t& parameters = keyvi::util::parameters_t())
       : JsonValueStoreMinimizationBase(parameters) {
-    compression_threshold_ = keyvi::util::mapGet(parameters_, COMPRESSION_THRESHOLD_KEY, 32);
-    std::string compressor = keyvi::util::mapGet<std::string>(parameters_, COMPRESSION_KEY, {});
-    minimize_ = keyvi::util::mapGetBool(parameters_, MINIMIZATION_KEY, true);
-    std::string float_mode = keyvi::util::mapGet<std::string>(parameters_, SINGLE_PRECISION_FLOAT_KEY, {});
+    compression_threshold_ = keyvi::util::mapGet(parameters, COMPRESSION_THRESHOLD_KEY, 32);
+    std::string compressor = keyvi::util::mapGet<std::string>(parameters, COMPRESSION_KEY, {});
+    minimize_ = keyvi::util::mapGetBool(parameters, MINIMIZATION_KEY, true);
+    std::string float_mode = keyvi::util::mapGet<std::string>(parameters, SINGLE_PRECISION_FLOAT_KEY, {});
 
     if (float_mode == "single") {
       single_precision_float_ = true;
@@ -217,7 +215,7 @@ class JsonValueStore final : public JsonValueStoreMinimizationBase {
     uint64_t pt = static_cast<uint64_t>(values_buffer_size_);
     size_t length;
 
-    keyvi::util::encodeVarint(string_buffer_.size(), values_extern_.get(), &length);
+    keyvi::util::encodeVarInt(string_buffer_.size(), values_extern_.get(), &length);
     values_buffer_size_ += length;
     values_extern_->Append(reinterpret_cast<const void*>(string_buffer_.data()), string_buffer_.size());
     values_buffer_size_ += string_buffer_.size();
@@ -235,7 +233,7 @@ class JsonValueStoreMerge final : public JsonValueStoreMinimizationBase {
     size_t buffer_size;
 
     const char* full_buf = payload + fsa_value;
-    const char* buf_ptr = keyvi::util::decodeVarintString(full_buf, &buffer_size);
+    const char* buf_ptr = keyvi::util::decodeVarIntString(full_buf, &buffer_size);
 
     const RawPointerForCompare<MemoryMapManager> stp(buf_ptr, buffer_size, values_extern_.get());
     const RawPointer<> p = hash_.Get(stp);
@@ -342,7 +340,7 @@ class JsonValueStoreReader final : public IValueStoreReader {
   attributes_t GetValueAsAttributeVector(uint64_t fsa_value) const override {
     attributes_t attributes(new attributes_raw_t());
 
-    std::string raw_value = keyvi::util::decodeVarintString(strings_ + fsa_value);
+    std::string raw_value = keyvi::util::decodeVarIntString(strings_ + fsa_value);
 
     // auto length = keyvi::util::decodeVarint((uint8_t*) strings_ + fsa_value);
     // std::string raw_value(strings_ + fsa_value, length);
@@ -352,12 +350,12 @@ class JsonValueStoreReader final : public IValueStoreReader {
   }
 
   std::string GetRawValueAsString(uint64_t fsa_value) const override {
-    return keyvi::util::decodeVarintString(strings_ + fsa_value);
+    return keyvi::util::decodeVarIntString(strings_ + fsa_value);
   }
 
   std::string GetValueAsString(uint64_t fsa_value) const override {
     TRACE("JsonValueStoreReader GetValueAsString");
-    std::string packed_string = keyvi::util::decodeVarintString(strings_ + fsa_value);
+    std::string packed_string = keyvi::util::decodeVarIntString(strings_ + fsa_value);
 
     return keyvi::util::DecodeJsonValue(packed_string);
   }
