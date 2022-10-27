@@ -111,6 +111,31 @@ BOOST_AUTO_TEST_CASE(limit) {
   BOOST_CHECK(expected_it == expected_output.end());
 }
 
+BOOST_AUTO_TEST_CASE(numres) {
+  std::vector<std::pair<std::string, uint32_t>> test_data = {
+      {"angel", 22},          {"angeli", 24},       {"angelina", 444},
+      {"angela merkel", 200}, {"angela merk", 180}, {"angelo merk", 10},
+  };
+  testing::TempDictionary dictionary(&test_data);
+  dictionary_t d(new Dictionary(dictionary.GetFsa()));
+
+  std::vector<std::string> expected_output;
+  expected_output.push_back("angel");
+  expected_output.push_back("angeli");
+  expected_output.push_back("angelina");
+  expected_output.push_back("angela merk");
+
+  PrefixCompletion prefix_completion(d);
+
+  auto expected_it = expected_output.begin();
+  for (auto m : prefix_completion.GetCompletions("angel", 4)) {
+    BOOST_CHECK_EQUAL(*expected_it++, m.GetMatchedString());
+  }
+
+  BOOST_CHECK(expected_it == expected_output.end());
+
+}
+
 BOOST_AUTO_TEST_CASE(approx1) {
   std::vector<std::pair<std::string, uint32_t>> test_data = {
       {"aabc", 22},  {"aabcdefghijklmnop", 45}, {"aabcül", 55}, {"bbbc", 22}, {"bbbd", 444},
