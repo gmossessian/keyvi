@@ -120,10 +120,10 @@ BOOST_AUTO_TEST_CASE(numres) {
   dictionary_t d(new Dictionary(dictionary.GetFsa()));
 
   std::vector<std::string> expected_output;
-  expected_output.push_back("angel");
-  expected_output.push_back("angeli");
   expected_output.push_back("angelina");
+  expected_output.push_back("angela merkel);
   expected_output.push_back("angela merk");
+  expected_output.push_back("angeli");
 
   PrefixCompletion prefix_completion(d);
 
