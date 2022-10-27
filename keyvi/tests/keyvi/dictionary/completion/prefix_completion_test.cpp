@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(numres) {
   // expected output should be in descending score order
   std::vector<std::string> expected_output;
   expected_output.push_back("angelina");
-  expected_output.push_back("angela merkel);
+  expected_output.push_back("angela merkel");
   expected_output.push_back("angela merk");
   expected_output.push_back("angeli");
 
