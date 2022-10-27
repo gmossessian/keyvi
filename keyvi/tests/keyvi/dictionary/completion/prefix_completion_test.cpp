@@ -118,7 +118,8 @@ BOOST_AUTO_TEST_CASE(numres) {
   };
   testing::TempDictionary dictionary(&test_data);
   dictionary_t d(new Dictionary(dictionary.GetFsa()));
-
+  
+  // expected output should be in descending score order
   std::vector<std::string> expected_output;
   expected_output.push_back("angelina");
   expected_output.push_back("angela merkel);
