@@ -79,6 +79,8 @@ struct BoundedPriorityQueue {
     std::push_heap(elements_, elements_ + size_, std::greater<T>());
   }
 
+  size_t size() { return size_; }
+
  private:
   T* elements_;
   size_t size_;

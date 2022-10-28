@@ -54,11 +54,11 @@ struct TraversalPayload<NearTransition> {
   bool exact = true;
 };
 
-template <>
-struct TraversalStatePayload<NearTransition> {
-  std::vector<NearTransition> transitions;
-  size_t position = 0;
-};
+//template <>
+//struct TraversalStatePayload<NearTransition> {
+//  std::vector<NearTransition> transitions;
+//  size_t position = 0;
+//};
 
 template <>
 inline void TraversalState<NearTransition>::PostProcess(TraversalPayload<NearTransition>* payload) {

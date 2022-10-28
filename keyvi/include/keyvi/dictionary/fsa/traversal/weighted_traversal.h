@@ -49,7 +49,10 @@ struct WeightedTransition {
 template <>
 struct TraversalPayload<WeightedTransition> {
  TraversalPayload() : current_depth(0), lookup_key() {}
- explicit TraversalPayload(std::shared_ptr<std::string>& lookup_key): current_depth(0), lookup_key(lookup_key) {}
+
+ explicit TraversalPayload(std::shared_ptr<std::string>& lookup_key)
+ : current_depth(0)
+ , lookup_key(lookup_key) {}
 
  size_t current_depth;
  std::shared_ptr<std::string> lookup_key;

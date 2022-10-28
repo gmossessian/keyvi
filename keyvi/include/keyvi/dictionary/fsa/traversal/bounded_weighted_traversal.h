@@ -26,6 +26,7 @@
 #define KEYVI_DICTIONARY_FSA_TRAVERSAL_BOUNDED_WEIGHTED_TRAVERSAL_H_
 
 #include <algorithm>
+#include <cstdint>
 
 #include "keyvi/dictionary/fsa/traversal/weighted_traversal.h"
 #include "keyvi/dictionary/util/bounded_priority_queue.h"
@@ -44,19 +45,56 @@ struct BoundedWeightedTransition : public WeightedTransition {
 
 template <>
 struct TraversalPayload<BoundedWeightedTransition> {
-  TraversalPayload() : current_depth(0), priority_queue(10) {}
+ TraversalPayload() : current_depth(0), lookup_key() , best_scores(10) {}
 
-  size_t current_depth;
-  util::BoundedPriorityQueue<uint32_t> priority_queue;
+ explicit TraversalPayload(std::shared_ptr<std::string>& lookup_key, uint32_t num_results)
+ : current_depth(0)
+ , lookup_key(lookup_key)
+ , best_scores(num_results) {}
+
+ size_t current_depth;
+ std::shared_ptr<std::string> lookup_key;
+ util::BoundedPriorityQueue<uint32_t> best_scores;
 };
 
 template <>
 inline void TraversalState<BoundedWeightedTransition>::PostProcess(
-    TraversalPayload<BoundedWeightedTransition>* payload) {
+    TraversalPayload<BoundedWeightedTransition>* payload
+) {
   if (traversal_state_payload.transitions.size() > 0) {
     std::sort(traversal_state_payload.transitions.begin(), traversal_state_payload.transitions.end(),
               WeightedTransitionCompare);
   }
+  if (traversal_state_payload.transitions.size() > payload->best_scores.size()) {
+    // can't call resize because transition has no default constructor
+    traversal_state_payload.transitions.erase(
+      traversal_state_payload.transitions.begin() + payload->best_scores.size(),
+      traversal_state_payload.transitions.end()
+    );
+  }
+}
+
+template<>
+inline void TraversalState<BoundedWeightedTransition>::Add(
+  uint64_t s, uint32_t w, unsigned char l, TraversalPayload<BoundedWeightedTransition> *payload
+) {
+  if (
+    payload->lookup_key &&
+    payload->current_depth < payload->lookup_key->size() &&
+    static_cast<const unsigned char>(payload->lookup_key->operator[](payload->current_depth)) != l
+  ) {
+    return;
+  }
+  if (w <= payload->best_scores.Back()) {
+    return;
+  }
+  traversal_state_payload.transitions.push_back(BoundedWeightedTransition(s, w, l));
+  payload->best_scores.Put(w);
+}
+
+template <>
+inline uint32_t TraversalState<BoundedWeightedTransition>::GetNextInnerWeight() const {
+  return traversal_state_payload.transitions[traversal_state_payload.position].weight;
 }
 
 } /* namespace traversal */
