@@ -130,11 +130,14 @@ BOOST_AUTO_TEST_CASE(numres) {
 
   auto expected_it = expected_output.begin();
   for (auto m : prefix_completion.GetCompletions("angel", 4)) {
+    if (expected_it == expected_output.end()) {
+      BOOST_CHECK(false);
+      break;
+    }
     BOOST_CHECK_EQUAL(*expected_it++, m.GetMatchedString());
   }
 
   BOOST_CHECK(expected_it == expected_output.end());
-
 }
 
 BOOST_AUTO_TEST_CASE(approx1) {

@@ -45,6 +45,7 @@ struct BoundedWeightedTransition : public WeightedTransition {
 template <>
 struct TraversalPayload<BoundedWeightedTransition> {
   TraversalPayload() : current_depth(0), priority_queue(10) {}
+  explicit TraversalPayload(size_t size) : current_depth(0), priority_queue(size) {}
 
   size_t current_depth;
   util::BoundedPriorityQueue<uint32_t> priority_queue;

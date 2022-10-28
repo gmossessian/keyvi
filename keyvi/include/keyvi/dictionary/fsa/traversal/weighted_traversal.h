@@ -46,18 +46,55 @@ struct WeightedTransition {
   unsigned char label;
 };
 
+template <>
+struct TraversalPayload<WeightedTransition> {
+  TraversalPayload() : current_depth(0), lookup_key() {}
+  explicit TraversalPayload(std::shared_ptr<std::string>& lookup_key) : current_depth(0), lookup_key(lookup_key) {}
+
+  size_t current_depth;
+  std::shared_ptr<std::string> lookup_key;
+};
+
+
 static bool WeightedTransitionCompare(const WeightedTransition& a, const WeightedTransition& b) {
   TRACE("compare %d %d", a.weight, b.weight);
 
   return a.weight > b.weight;
 }
 
+// neccessary to override so that transitions have a weight param
+template <>
+struct TraversalStatePayload<WeightedTransition> {
+  std::vector<WeightedTransition> transitions;
+  size_t position = 0;
+};
+
 template <>
 inline void TraversalState<WeightedTransition>::PostProcess(TraversalPayload<WeightedTransition>* payload) {
   if (traversal_state_payload.transitions.size() > 0) {
-    std::sort(traversal_state_payload.transitions.begin(), traversal_state_payload.transitions.end(),
-              WeightedTransitionCompare);
+    std::sort(
+      traversal_state_payload.transitions.begin(),
+      traversal_state_payload.transitions.end(),
+      WeightedTransitionCompare
+    );
   }
+}
+
+template<>
+inline void TraversalState<WeightedTransition>::Add(
+  uint64_t s,
+  uint32_t w,
+  unsigned char l,
+  TraversalPayload<WeightedTransition>* payload
+) {
+  if (
+    payload->current_depth < payload->lookup_key->size() &&
+    static_cast<const unsigned char>(payload->lookup_key->operator[](payload->current_depth)) == l
+  ) {
+    traversal_state_payload.position = 0;
+    traversal_state_payload.transitions[0] = WeightedTransition(s, w, l);
+  }
+  traversal_state_payload.transitions.push_back(WeightedTransition(s, w, l));
 }
 
 template <>

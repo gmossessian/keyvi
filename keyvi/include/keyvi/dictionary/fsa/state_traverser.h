@@ -133,6 +133,7 @@ class StateTraverser final {
         TRACE("traverser exhausted.");
         current_label_ = 0;
         at_end_ = true;
+        current_weight_ = 0;
         return;
       }
 
@@ -152,7 +153,7 @@ class StateTraverser final {
   }
 
   label_t GetStateLabel() const { return current_label_; }
-
+  
   traversal::TraversalPayload<TransitionT> &GetTraversalPayload() { return stack_.traversal_stack_payload; }
 
   operator bool() const { return !at_end_; }
