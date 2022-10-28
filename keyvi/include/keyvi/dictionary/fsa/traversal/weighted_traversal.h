@@ -69,6 +69,22 @@ inline void TraversalState<WeightedTransition>::PostProcess(TraversalPayload<Wei
   }
 }
 
+template<>
+inline void TraversalState<WeightedTransition>::Add(
+  uint64_t s, uint32_t w, unsigned char l, TraversalPayload<WeightedTransition> *payload
+) {
+  if (
+    payload->lookup_key &&
+    payload->current_depth < payload->lookup_key->size() &&
+    static_cast<const unsigned char>(payload->lookup_key->operator[](payload->current_depth)) == l
+  ) {
+    traversal_state_payload.position = 0;
+    traversal_state_payload.transitions[0] = (WeightedTransition(s, w, l));
+    return;
+  }
+  traversal_state_payload.transitions.push_back(WeightedTransition(s, w, l));
+}
+
 template <>
 inline uint32_t TraversalState<WeightedTransition>::GetNextInnerWeight() const {
   return traversal_state_payload.transitions[traversal_state_payload.position].weight;
