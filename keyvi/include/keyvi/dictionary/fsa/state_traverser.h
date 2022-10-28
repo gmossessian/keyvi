@@ -132,6 +132,7 @@ class StateTraverser final {
       if (stack_.GetDepth() == 0) {
         TRACE("traverser exhausted.");
         current_label_ = 0;
+        current_weight_ = 0;
         at_end_ = true;
         return;
       }
