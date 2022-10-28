@@ -76,10 +76,8 @@ inline void TraversalState<WeightedTransition>::Add(
   if (
     payload->lookup_key &&
     payload->current_depth < payload->lookup_key->size() &&
-    static_cast<const unsigned char>(payload->lookup_key->operator[](payload->current_depth)) == l
+    static_cast<const unsigned char>(payload->lookup_key->operator[](payload->current_depth)) != l
   ) {
-    traversal_state_payload.position = 0;
-    traversal_state_payload.transitions[0] = (WeightedTransition(s, w, l));
     return;
   }
   traversal_state_payload.transitions.push_back(WeightedTransition(s, w, l));

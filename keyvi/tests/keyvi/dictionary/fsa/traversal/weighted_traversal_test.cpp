@@ -39,18 +39,11 @@ namespace fsa {
 
 BOOST_AUTO_TEST_SUITE(WeightedTraversalTests)
 
-inline void 
-check_next_state(
-  StateTraverser<traversal::WeightedTransition> *s, 
-  unsigned char c, 
-  uint32_t w, 
-  uint32_t d
-) {
-  (*s)++;
-  BOOST_CHECK_EQUAL(c, s->GetStateLabel());
-  BOOST_CHECK_EQUAL(w, s->GetInnerWeight());
-  BOOST_CHECK_EQUAL(d, s->GetDepth());
-}
+#define check_next_state(S, C, W, D)              \
+  (*(S))++;                                       \
+  BOOST_CHECK_EQUAL((C), (S)->GetStateLabel());   \
+  BOOST_CHECK_EQUAL((W), (S)->GetInnerWeight());  \
+  BOOST_CHECK_EQUAL((D), (S)->GetDepth());
 
 BOOST_AUTO_TEST_CASE(basicWeightedTraversal) {
   std::vector<std::pair<std::string, std::uint32_t>> test_data = {
@@ -87,6 +80,37 @@ BOOST_AUTO_TEST_CASE(basicWeightedTraversal) {
   check_next_state(&s, 0, 0, 0);
   check_next_state(&s, 0, 0, 0);  
 }
+
+BOOST_AUTO_TEST_CASE(prefixWeightedTraversal) {
+  std::vector<std::pair<std::string, std::uint32_t>> test_data = {
+    {"aa", 5}, {"ab", 4}, {"ac", 6}, {"aba", 3}, {"cd", 10}, {"cdd", 2}
+  };
+
+  testing::TempDictionary dictionary(&test_data);
+  automata_t f = dictionary.GetFsa();
+
+  std::shared_ptr<std::string> lookup_key = std::make_shared<std::string>("a");
+  auto payload = traversal::TraversalPayload<traversal::WeightedTransition>(lookup_key);
+
+  StateTraverser<traversal::WeightedTransition> s(f, f->GetStartState(), std::move(payload));
+
+  // first we go down "ac"
+  BOOST_CHECK_EQUAL('a', s.GetStateLabel());
+  BOOST_CHECK_EQUAL(6, s.GetInnerWeight());
+  BOOST_CHECK_EQUAL(1, s.GetDepth());
+
+  check_next_state(&s, 'c', 6, 2);
+  // then "aa" and "ab", "aba"
+  check_next_state(&s, 'a', 5, 2);
+  check_next_state(&s, 'b', 4, 2);
+  check_next_state(&s, 'a', 3, 3);
+
+  // check we're done
+  BOOST_CHECK(s.IsFinalState());
+  check_next_state(&s, 0, 0, 0);
+  check_next_state(&s, 0, 0, 0);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
