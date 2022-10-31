@@ -38,6 +38,7 @@
 #include "keyvi/dictionary/match_iterator.h"
 #include "keyvi/dictionary/matching/fuzzy_matching.h"
 #include "keyvi/dictionary/matching/near_matching.h"
+#include "keyvi/dictionary/completion/prefix_completion_2.h"
 
 // #define ENABLE_TRACING
 #include "keyvi/dictionary/util/trace.h"
@@ -323,6 +324,17 @@ class Dictionary final {
     auto func = [data]() { return data->NextMatch(); };
     return MatchIterator::MakeIteratorPair(func, data->FirstMatch());
   }
+
+//  MatchIterator::MatchIteratorPair GetNear(const std::string& key, const size_t minimum_prefix_length,
+//                                           const bool greedy = false) const {
+//    auto data = std::make_shared<matching::NearMatching<>>(
+//        matching::NearMatching<>::FromSingleFsa(fsa_, key, minimum_prefix_length, greedy));
+//
+//    auto func = [data]() { return data->NextMatch(); };
+//    return MatchIterator::MakeIteratorPair(func, data->FirstMatch());
+//  }
+
+
 
   std::string GetManifest() const { return fsa_->GetManifest(); }
 

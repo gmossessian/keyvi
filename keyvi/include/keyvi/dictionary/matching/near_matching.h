@@ -64,8 +64,9 @@ class NearMatching final {
    * @param minimum_exact_prefix the minimum exact prefix to match before matching approximate
    * @param greedy if true matches everything below minimum prefix
    */
-  static NearMatching FromSingleFsa(const fsa::automata_t& fsa, const std::string& query,
-                                    const size_t minimum_exact_prefix, const bool greedy = false) {
+  static NearMatching FromSingleFsa(
+    const fsa::automata_t& fsa, const std::string& query, const size_t minimum_exact_prefix, const bool greedy = false
+  ) {
     uint64_t state = fsa->GetStartState();
 
     if (query.size() < minimum_exact_prefix) {
@@ -159,8 +160,9 @@ class NearMatching final {
     std::unique_ptr<fsa::ZipStateTraverser<fsa::NearStateTraverser>> traverser;
     traverser.reset(new fsa::ZipStateTraverser<fsa::NearStateTraverser>(std::move(fsa_start_state_payloads)));
 
-    return NearMatching<fsa::ZipStateTraverser<fsa::NearStateTraverser>>(std::move(traverser), std::move(first_match),
-                                                                         query.substr(0, exact_prefix), greedy);
+    return NearMatching<fsa::ZipStateTraverser<fsa::NearStateTraverser>>(
+      std::move(traverser), std::move(first_match), query.substr(0, exact_prefix), greedy
+    );
   }
 
   static inline fsa_start_state_payloads_t FilterWithExactPrefix(const std::vector<fsa::automata_t>& fsas,
