@@ -200,7 +200,7 @@ class WeightedMatching final {
     return fsa_start_state_payloads;
   }
 
-  Match FirstMatch() { num_matched_++; return first_match_; }
+  Match FirstMatch() { return first_match_; }
 
   Match NextMatch() {
     TRACE("call next match %lu", matched_depth_);
@@ -221,13 +221,6 @@ class WeightedMatching final {
           traverser_ptr_->GetFsa(),
           traverser_ptr_->GetStateValue()
         );
-
-//        if (!greedy_) {
-//          // remember the depth
-//          TRACE("found a match, remember depth, only allow matches with same depth %ld",
-//                traverser_ptr_->GetTraversalPayload().exact_depth);
-//          matched_depth_ = traverser_ptr_->GetTraversalPayload().exact_depth;
-//        }
 
         (*traverser_ptr_)++;
         num_matched_++;

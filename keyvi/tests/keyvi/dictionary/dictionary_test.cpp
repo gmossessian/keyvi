@@ -193,6 +193,81 @@ BOOST_AUTO_TEST_CASE(DictGetNear) {
   BOOST_CHECK_EQUAL(expected_matches.size(), i);
 }
 
+BOOST_AUTO_TEST_CASE(DictGetCompletions) {
+  std::vector<std::pair<std::string, std::uint32_t>> test_data = {
+    {"aaaa", 10},
+    {"aabb", 6},
+    {"abcd", 8},
+    {"cccc", 12},
+  };
+
+  testing::TempDictionary dictionary(&test_data);
+  dictionary_t d(new Dictionary(dictionary.GetFsa()));
+
+  // get all completions with no prefix, in order
+  std::vector<std::pair<std::string, std::uint32_t>> expected_matches = {
+    {"cccc", 12},
+    {"aaaa", 10},
+    {"abcd", 8},
+    {"aabb", 6},
+  };
+
+  size_t i = 0;
+
+  for (auto m : d->GetCompletions("")) {
+    if (i >= expected_matches.size()) {
+      BOOST_FAIL("got more results than expected.");
+    }
+    BOOST_CHECK_EQUAL(0, m.GetScore());
+    BOOST_CHECK_EQUAL(expected_matches[i].first, m.GetMatchedString());
+    BOOST_CHECK_EQUAL(expected_matches[i].second, m.GetScore());
+    ++i;
+  }
+      BOOST_CHECK_EQUAL(1, 2);
+
+
+  BOOST_CHECK_EQUAL(expected_matches.size(), i);
+
+  // get all completions for "a", in order
+  expected_matches = {
+    {"aaaa", 10},
+    {"abcd", 8},
+    {"aabb", 6},
+  };
+
+  i = 0;
+
+  for (auto m : d->GetCompletions("a")) {
+    if (i >= expected_matches.size()) {
+      BOOST_FAIL("got more results than expected.");
+    }
+    BOOST_CHECK_EQUAL(expected_matches[i].first, m.GetMatchedString());
+    BOOST_CHECK_EQUAL(expected_matches[i].second, m.GetScore());
+    ++i;
+  }
+
+  BOOST_CHECK_EQUAL(expected_matches.size(), i);
+
+  // get 2 completions for "a", in order
+  expected_matches = {
+    {"aaaa", 10},
+    {"abcd", 8},
+  };
+
+  i = 0;
+
+  for (auto m : d->GetCompletions("a", 2)) {
+    if (i >= expected_matches.size()) {
+      BOOST_FAIL("got more results than expected.");
+    }
+    BOOST_CHECK_EQUAL(expected_matches[i].first, m.GetMatchedString());
+    BOOST_CHECK_EQUAL(expected_matches[i].second, m.GetScore());
+    ++i;
+  }
+
+  BOOST_CHECK_EQUAL(expected_matches.size(), i);
+}
+
 BOOST_AUTO_TEST_CASE(DictGetZerobyte) {
   std::vector<std::pair<std::string, uint32_t>> test_data = {
       {std::string("\0test", 5), 22},
