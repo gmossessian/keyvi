@@ -38,6 +38,7 @@
 #include "keyvi/dictionary/match_iterator.h"
 #include "keyvi/dictionary/matching/fuzzy_matching.h"
 #include "keyvi/dictionary/matching/near_matching.h"
+#include "keyvi/dictionary/completion/prefix_completion_2.h"
 #include "keyvi/index/internal/index_lookup_util.h"
 #include "keyvi/index/internal/read_only_segment.h"
 
@@ -244,6 +245,81 @@ class BaseIndexReader {
     auto func = [fuzzy_matcher, deleted_keys_map]() { return NextFilteredMatch(fuzzy_matcher, deleted_keys_map); };
     // check if first match is a deleted key and reset in case
     return dictionary::MatchIterator::MakeIteratorPair(func, FirstFilteredMatch(fuzzy_matcher, deleted_keys_map));
+  }
+
+    /**
+   * Match prefix: Iterate over everything below the prefix, highest weight first, up to max_num_results
+   *
+   * @param query a query to match against
+   * @param max_num_results number of results to return, if 0 return all of them
+   */
+  dictionary::MatchIterator::MatchIteratorPair GetCompletions(
+    const std::string& query, const size_t max_num_results = 0
+  ) {
+    TRACE("getting completions: %s max num results %ld", query.c_str(), max_num_results);
+    const_segments_t segments = payload_.Segments();
+
+    if (segments->size() == 0) {
+      return dictionary::MatchIterator::EmptyIteratorPair();
+    }
+
+    std::vector<dictionary::fsa::automata_t> fsas;
+    for (auto it = segments->cbegin(); it != segments->cend(); it++) {
+      fsas.push_back((*it)->GetDictionary()->GetFsa());
+    }
+
+    auto fsa_start_state_payloads =
+        dictionary::matching::WeightedMatching<>::FilterWithExactPrefix(fsas, query);
+
+    if (fsa_start_state_payloads.size() == 0) {
+      return dictionary::MatchIterator::EmptyIteratorPair();
+    }
+
+    if (fsa_start_state_payloads.size() == 1) {
+      auto weighted_matcher =
+        std::make_shared<dictionary::matching::WeightedMatching<>>(
+          dictionary::matching::WeightedMatching<>::FromSingleFsa(
+            std::get<0>(fsa_start_state_payloads[0]),
+            std::get<1>(fsa_start_state_payloads[0]),
+            query,
+            max_num_results
+          )
+        );
+
+      for (auto it = segments->crbegin(); it != segments->crend(); it++) {
+        if ((*it)->GetDictionary()->GetFsa() == std::get<0>(fsa_start_state_payloads[0])) {
+          typename SegmentT::deleted_ptr_t deleted_keys = (*it)->DeletedKeys();
+          if ((*it)->DeletedKeysSize() > 0) {
+            auto func = [weighted_matcher, deleted_keys]() { return NextFilteredMatchSingle(weighted_matcher, deleted_keys); };
+
+            // check if first match is a deleted key and reset in case
+            return dictionary::MatchIterator::MakeIteratorPair(
+              func, FirstFilteredMatchSingle(weighted_matcher, deleted_keys)
+            );
+          }
+          break;  // else: found the fsa, but segments has no deletes
+        }
+      }
+
+      auto func = [weighted_matcher]() { return weighted_matcher->NextMatch(); };
+      return dictionary::MatchIterator::MakeIteratorPair(func, weighted_matcher->FirstMatch());
+    }
+
+    auto deleted_keys_map = CreatedDeletedKeysMap(segments, fsa_start_state_payloads);
+    auto weighted_matcher = std::make_shared<
+        dictionary::matching::WeightedMatching<dictionary::fsa::ZipStateTraverser<dictionary::fsa::WeightedStateTraverser>>>(
+        dictionary::matching::WeightedMatching<dictionary::fsa::ZipStateTraverser<dictionary::fsa::WeightedStateTraverser>>::
+          FromMulipleFsas(std::move(fsa_start_state_payloads), query, max_num_results)
+        );
+
+    if (deleted_keys_map.size() == 0) {
+      auto func = [weighted_matcher]() { return weighted_matcher->NextMatch(); };
+      return dictionary::MatchIterator::MakeIteratorPair(func, weighted_matcher->FirstMatch());
+    }
+
+    auto func = [weighted_matcher, deleted_keys_map]() { return NextFilteredMatch(weighted_matcher, deleted_keys_map); };
+    // check if first match is a deleted key and reset in case
+    return dictionary::MatchIterator::MakeIteratorPair(func, FirstFilteredMatch(weighted_matcher, deleted_keys_map));
   }
 
  protected:

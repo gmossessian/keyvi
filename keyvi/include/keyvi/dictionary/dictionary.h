@@ -325,14 +325,16 @@ class Dictionary final {
     return MatchIterator::MakeIteratorPair(func, data->FirstMatch());
   }
 
-//  MatchIterator::MatchIteratorPair GetNear(const std::string& key, const size_t minimum_prefix_length,
-//                                           const bool greedy = false) const {
-//    auto data = std::make_shared<matching::NearMatching<>>(
-//        matching::NearMatching<>::FromSingleFsa(fsa_, key, minimum_prefix_length, greedy));
-//
-//    auto func = [data]() { return data->NextMatch(); };
-//    return MatchIterator::MakeIteratorPair(func, data->FirstMatch());
-//  }
+  MatchIterator::MatchIteratorPair GetCompletions(
+    const std::string& key, const size_t max_num_results = 0
+  ) const {
+    auto data = std::make_shared<matching::WeightedMatching<>>(
+      matching::WeightedMatching<>::FromSingleFsa(fsa_, key, max_num_results)
+    );
+
+    auto func = [data]() { return data->NextMatch(); };
+    return MatchIterator::MakeIteratorPair(func, data->FirstMatch());
+  }
 
 
 

@@ -200,7 +200,7 @@ class WeightedMatching final {
     return fsa_start_state_payloads;
   }
 
-  Match FirstMatch() const { num_matched_++; return first_match_; }
+  Match FirstMatch() { num_matched_++; return first_match_; }
 
   Match NextMatch() {
     TRACE("call next match %lu", matched_depth_);
