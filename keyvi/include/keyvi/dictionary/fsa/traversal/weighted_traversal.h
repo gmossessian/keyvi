@@ -69,7 +69,7 @@ inline void TraversalState<WeightedTransition>::PostProcess(TraversalPayload<Wei
   if (traversal_state_payload.transitions.size() > 0) {
     std::sort(traversal_state_payload.transitions.begin(), traversal_state_payload.transitions.end(),
               WeightedTransitionCompare);
-    traversal_state_payload.position = 0;
+//    traversal_state_payload.position = 0;
   }
 }
 
@@ -91,6 +91,27 @@ inline void TraversalState<WeightedTransition>::Add(
 template <>
 inline uint32_t TraversalState<WeightedTransition>::GetNextInnerWeight() const {
   return traversal_state_payload.transitions[traversal_state_payload.position].weight;
+}
+
+template <>
+inline size_t& TraversalStack<WeightedTransition>::Up() {
+  size_t depth_of_max_weight = 0;
+  uint32_t max_weight = 0;
+  /* backtrack up only as far up as we need to to get to an alternative max weight branch */
+  size_t depth = traversal_stack_payload.current_depth - 1;
+  while( 1 ) {
+    const auto transitions = traversal_states[depth].traversal_state_payload.transitions;
+    const auto position = traversal_states[depth].traversal_state_payload.position;
+    if (transitions.size() > (position + 1) && transitions[position + 1].weight > max_weight) {
+      max_weight = transitions[position + 1].weight;
+      depth_of_max_weight = depth;
+    }
+    if (depth == 0) { break; }
+    --depth;
+
+  }
+  traversal_stack_payload.current_depth = depth_of_max_weight;
+  return traversal_stack_payload.current_depth;
 }
 
 } /* namespace traversal */

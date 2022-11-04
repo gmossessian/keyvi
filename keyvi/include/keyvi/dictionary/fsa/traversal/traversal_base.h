@@ -143,6 +143,8 @@ struct TraversalStack {
 
   size_t operator--(int) { return traversal_stack_payload.current_depth--; }
 
+  size_t& Up() { return this->operator--(); }
+
   std::vector<TraversalState<TransitionT>> traversal_states;
   TraversalPayload<TransitionT> traversal_stack_payload;
 };

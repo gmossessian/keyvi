@@ -112,8 +112,9 @@ class StateTraverser final {
   }
 
   void Prune() {
+    /* QUESTION: can this ever be called if depth == 0? */
     TRACE("statetraverser Prune.");
-    --stack_;
+    stack_.Up();
     stack_.GetStates()++;
   }
 
@@ -138,7 +139,8 @@ class StateTraverser final {
       }
 
       TRACE("state is 0, go up");
-      --stack_;
+      stack_.Up();
+      /* move on to the next position in the current set of transitions */
       stack_.GetStates()++;
       current_state_ = stack_.GetStates().GetNextState();
       TRACE("next state %ld depth %ld", current_state_, stack_.GetDepth());
