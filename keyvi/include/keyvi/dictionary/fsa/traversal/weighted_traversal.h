@@ -69,6 +69,7 @@ inline void TraversalState<WeightedTransition>::PostProcess(TraversalPayload<Wei
   if (traversal_state_payload.transitions.size() > 0) {
     std::sort(traversal_state_payload.transitions.begin(), traversal_state_payload.transitions.end(),
               WeightedTransitionCompare);
+    traversal_state_payload.position = 0;
   }
 }
 
@@ -76,6 +77,7 @@ template<>
 inline void TraversalState<WeightedTransition>::Add(
   uint64_t s, uint32_t w, unsigned char l, TraversalPayload<WeightedTransition> *payload
 ) {
+  /* TODO: this might return leaf nodes *shorter* than the prefix as well? */
   if (
     payload->lookup_key &&
     payload->current_depth < payload->lookup_key->size() &&

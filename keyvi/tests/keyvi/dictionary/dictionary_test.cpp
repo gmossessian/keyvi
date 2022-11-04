@@ -218,13 +218,10 @@ BOOST_AUTO_TEST_CASE(DictGetCompletions) {
     if (i >= expected_matches.size()) {
       BOOST_FAIL("got more results than expected.");
     }
-    BOOST_CHECK_EQUAL(0, m.GetScore());
     BOOST_CHECK_EQUAL(expected_matches[i].first, m.GetMatchedString());
     BOOST_CHECK_EQUAL(expected_matches[i].second, m.GetScore());
     ++i;
   }
-      BOOST_CHECK_EQUAL(1, 2);
-
 
   BOOST_CHECK_EQUAL(expected_matches.size(), i);
 

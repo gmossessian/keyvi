@@ -204,18 +204,16 @@ class WeightedMatching final {
 
   Match NextMatch() {
     TRACE("call next match %lu", matched_depth_);
-    for (; traverser_ptr_ && (num_matched_ < max_num_results || max_num_results == 0);) {
+    for (; ! traverser_ptr_->AtEnd() && (num_matched_ < max_num_results || max_num_results == 0);) {
       if (traverser_ptr_->IsFinalState()) {
-        // optimize? fill vector upfront?
-        std::string match_str = query_ + std::string(
+        std::string match_str = std::string(
           reinterpret_cast<const char*>(traverser_ptr_->GetStateLabels().data()),
           traverser_ptr_->GetDepth()
         );
 
-        // length should be query.size???
         Match m(
           0,
-          traverser_ptr_->GetDepth() + query_.size(),
+          traverser_ptr_->GetDepth(),
           match_str,
           traverser_ptr_->GetInnerWeight(),
           traverser_ptr_->GetFsa(),

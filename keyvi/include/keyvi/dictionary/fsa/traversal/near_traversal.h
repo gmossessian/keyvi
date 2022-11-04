@@ -54,12 +54,6 @@ struct TraversalPayload<NearTransition> {
   bool exact = true;
 };
 
-//template <>
-//struct TraversalStatePayload<NearTransition> {
-//  std::vector<NearTransition> transitions;
-//  size_t position = 0;
-//};
-
 template <>
 inline void TraversalState<NearTransition>::PostProcess(TraversalPayload<NearTransition>* payload) {
   // check if we are still matching exact, if not mark it
