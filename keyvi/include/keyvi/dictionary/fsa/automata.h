@@ -283,54 +283,13 @@ class Automata final {
     for (int offset = 0; offset < 32; ++offset) {
       uint64_t xor_labels_with_mask = *labels_as_ll ^ *mask_as_ll;
 
-      if (((xor_labels_with_mask & 0x00000000000000ffULL) == 0)) {
-        uint64_t child_state = ResolvePointer(starting_state, symbol);
-        uint32_t weight = GetWeightValue(child_state);
-        weight = weight != 0 ? weight : parent_weight;
-        traversal_state->Add(child_state, weight, symbol, payload);
-      }
-      if ((xor_labels_with_mask & 0x000000000000ff00ULL) == 0) {
-        uint64_t child_state = ResolvePointer(starting_state, symbol + 1);
-        uint32_t weight = GetWeightValue(child_state);
-        weight = weight != 0 ? weight : parent_weight;
-        traversal_state->Add(child_state, weight, symbol + 1, payload);
-      }
-      if ((xor_labels_with_mask & 0x0000000000ff0000ULL) == 0) {
-        uint64_t child_state = ResolvePointer(starting_state, symbol + 2);
-        uint32_t weight = GetWeightValue(child_state);
-        weight = weight != 0 ? weight : parent_weight;
-        traversal_state->Add(child_state, weight, symbol + 2, payload);
-      }
-      if ((xor_labels_with_mask & 0x00000000ff000000ULL) == 0) {
-        uint64_t child_state = ResolvePointer(starting_state, symbol + 3);
-        uint32_t weight = GetWeightValue(child_state);
-        weight = weight != 0 ? weight : parent_weight;
-        traversal_state->Add(child_state, weight, symbol + 3, payload);
-      }
-      if ((xor_labels_with_mask & 0x000000ff00000000ULL) == 0) {
-        uint64_t child_state = ResolvePointer(starting_state, symbol + 4);
-        uint32_t weight = GetWeightValue(child_state);
-        weight = weight != 0 ? weight : parent_weight;
-        traversal_state->Add(child_state, weight, symbol + 4, payload);
-      }
-      if ((xor_labels_with_mask & 0x0000ff0000000000ULL) == 0) {
-        uint64_t child_state = ResolvePointer(starting_state, symbol + 5);
-        uint32_t weight = GetWeightValue(child_state);
-        weight = weight != 0 ? weight : parent_weight;
-        traversal_state->Add(child_state, weight, symbol + 5, payload);
-      }
-      if ((xor_labels_with_mask & 0x00ff000000000000ULL) == 0) {
-        uint64_t child_state = ResolvePointer(starting_state, symbol + 6);
-        uint32_t weight = GetWeightValue(child_state);
-        weight = weight != 0 ? weight : parent_weight;
-        traversal_state->Add(child_state, weight, symbol + 6, payload);
-      }
-      if ((xor_labels_with_mask & 0xff00000000000000ULL) == 0) {
-        uint64_t child_state = ResolvePointer(starting_state, symbol + 7);
-        uint32_t weight = GetWeightValue(child_state);
-        weight = weight != 0 ? weight : parent_weight;
-        traversal_state->Add(child_state, weight, symbol + 7, payload);
-      }
+      for (size_t i = 0; i < 8; ++i) {
+        if (((xor_labels_with_mask & 0xffULL << (i * 8)) == 0)) {
+          uint64_t child_state = ResolvePointer(starting_state, symbol + i);
+          uint32_t weight = GetWeightValue(child_state);
+          weight = weight != 0 ? weight : parent_weight;
+          traversal_state->Add(child_state, weight, symbol + i, payload);
+        }
 
       ++labels_as_ll;
       ++mask_as_ll;
